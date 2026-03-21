@@ -1,6 +1,7 @@
 package com.zzq.utils;
 
 
+import com.zzq.config.RedisStreamConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +26,17 @@ public class RedisStreamProducer {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
-    public static final String STREAM_KEY = "my-stream";
     public void sendObjectWithLimit(long maxLen) {
         HashMap<String, String> map = new HashMap<>();
         MapRecord<String, String,String> record = StreamRecords.newRecord()
-                .in(STREAM_KEY)
+                .in(RedisStreamConfig.STREAM_KEY)
                 .ofMap(map)
                 .withId(RecordId.autoGenerate());
 
         RecordId recordId = stringRedisTemplate.opsForStream().add(record);
 
         //  限制长度（trim）
-        stringRedisTemplate.opsForStream().trim(STREAM_KEY, maxLen, true);
+        stringRedisTemplate.opsForStream().trim(RedisStreamConfig.STREAM_KEY, maxLen, true);
         log.info("已发送对象消息，ID: {}, 当前限流长度: {}", recordId, maxLen);
     }
 }

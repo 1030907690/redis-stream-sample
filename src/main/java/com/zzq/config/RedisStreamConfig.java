@@ -28,6 +28,7 @@ public class RedisStreamConfig {
     @Autowired
     private MyStreamConsumer myStreamConsumer;
 
+    public static final String STREAM_KEY = "my-stream";
     @Bean
     public StreamMessageListenerContainer<String, MapRecord<String, String, String>> container(RedisConnectionFactory factory) {
         //  容器选项配置
