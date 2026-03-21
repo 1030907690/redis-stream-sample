@@ -25,9 +25,11 @@ public class RedisStreamProducer {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-    public void sendObjectWithLimit(String data){
-        sendObjectWithLimit(data, 2);
+
+    public void sendObjectWithLimit(String data) {
+        sendObjectWithLimit(data, 10000);
     }
+
     public void sendObjectWithLimit(String data, long maxLen) {
         HashMap<String, String> map = new HashMap<>();
         map.put("data", data);
@@ -38,7 +40,7 @@ public class RedisStreamProducer {
 
         RecordId recordId = stringRedisTemplate.opsForStream().add(record);
 
-        //  限制长度（trim）
+        //  限制长度（trim）  true 近似修剪
         stringRedisTemplate.opsForStream().trim(RedisStreamConfig.STREAM_KEY, maxLen, true);
         log.info("已发送对象消息，ID: {}, 当前限流长度: {}", recordId, maxLen);
     }
