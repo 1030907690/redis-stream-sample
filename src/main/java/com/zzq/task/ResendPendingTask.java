@@ -46,13 +46,8 @@ public class ResendPendingTask {
                 // 3. 如果消息超过 30 秒还没处理完，说明原消费者可能挂了，重新处理
                 if (elapsed.getSeconds() > 30) {
                     // 这里可以重新读取消息内容并执行业务，或者使用 XCLAIM 转移给其他消费者
-                    List<MapRecord<String, Object, Object>> records = stringRedisTemplate.opsForStream().claim(
-                            RedisStreamConfig.STREAM_KEY,
-                            RedisStreamConfig.GROUP_NAME,
-                            "consumer-1",
-                            Duration.ofSeconds(1), // 只要空闲超过 1s 就认领
-                            id
-                    );
+                    List<MapRecord<String, Object, Object>> records = stringRedisTemplate.opsForStream().range(RedisStreamConfig.STREAM_KEY,
+                            Range.of(Range.Bound.inclusive(message.getIdAsString()), Range.Bound.inclusive(message.getIdAsString())));
 
                     records.forEach(record -> {
                         log.info("重新处理消息: {}", record.getValue());
