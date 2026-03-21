@@ -30,6 +30,6 @@ public class MyStreamConsumer implements StreamListener<String, MapRecord<String
         log.info("收到消息: {}", map);
         // TODO 业务处理
 
-//        stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
+        stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
     }
 }
