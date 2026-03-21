@@ -39,9 +39,9 @@ public class RedisStreamProducer {
                 .withId(RecordId.autoGenerate());
 
         RecordId recordId = stringRedisTemplate.opsForStream().add(record);
+        log.info("已发送对象消息，ID: {}, 当前限流长度: {}", recordId, maxLen);
 
         //  限制长度（trim）  true 近似修剪
         stringRedisTemplate.opsForStream().trim(RedisStreamConfig.STREAM_KEY, maxLen, true);
-        log.info("已发送对象消息，ID: {}, 当前限流长度: {}", recordId, maxLen);
     }
 }
