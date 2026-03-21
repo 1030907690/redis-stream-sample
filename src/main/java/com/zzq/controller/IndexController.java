@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,7 +33,7 @@ public class IndexController {
     @GetMapping("/")
     @Operation(summary = "首页接口")
     public String index() {
-        redisStreamProducer.sendObjectWithLimit("张三");
+        redisStreamProducer.sendObjectWithLimit("张三"+ LocalDateTime.now());
         return "index";
     }
 
