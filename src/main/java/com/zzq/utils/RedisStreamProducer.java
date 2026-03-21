@@ -25,10 +25,13 @@ public class RedisStreamProducer {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-
-    public void sendObjectWithLimit(long maxLen) {
+    public void sendObjectWithLimit(String data){
+        sendObjectWithLimit(data, 2);
+    }
+    public void sendObjectWithLimit(String data, long maxLen) {
         HashMap<String, String> map = new HashMap<>();
-        MapRecord<String, String,String> record = StreamRecords.newRecord()
+        map.put("data", data);
+        MapRecord<String, String, String> record = StreamRecords.newRecord()
                 .in(RedisStreamConfig.STREAM_KEY)
                 .ofMap(map)
                 .withId(RecordId.autoGenerate());
