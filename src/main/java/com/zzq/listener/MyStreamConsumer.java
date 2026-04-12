@@ -10,6 +10,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 
 /**
@@ -21,6 +23,7 @@ import java.util.Map;
 public class MyStreamConsumer implements StreamListener<String, MapRecord<String, String, String>> {
 
     private static final Logger log = LoggerFactory.getLogger(MyStreamConsumer.class);
+
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
@@ -28,8 +31,16 @@ public class MyStreamConsumer implements StreamListener<String, MapRecord<String
     public void onMessage(MapRecord<String, String, String> record) {
         Map<String, String> map = record.getValue();
         log.info("收到消息: {}", map);
-        // TODO 业务处理
+        if (shouldConsumer(map)) {
+            // TODO 业务处理
+            stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
+        }
+    }
 
-        stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
+    private boolean shouldConsumer(Map<String, String> map) {
+        long time = Long.parseLong(map.get("time"));
+        LocalDateTime currentTime = LocalDateTime.now();
+        long currentTimestampMilli = currentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return currentTimestampMilli >= time;
     }
 }

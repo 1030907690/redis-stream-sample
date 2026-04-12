@@ -10,6 +10,7 @@ import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -43,6 +44,9 @@ public class RedisStreamProducer {
      * @param consumerDateTime  真正消费的时间，为了做延迟队列
      */
     public void sendObjectWithLimit(String data, long maxLen, LocalDateTime consumerDateTime) {
+        Assert.notNull(data, "data must not be null");
+        Assert.notNull(consumerDateTime, "consumerDateTime must not be null");
+
         HashMap<String, String> map = new HashMap<>();
         map.put("data", data);
         map.put("time", String.valueOf(consumerDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
