@@ -14,7 +14,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author zzq
@@ -50,14 +53,26 @@ public class ResendPendingTask {
                             Range.of(Range.Bound.inclusive(message.getIdAsString()), Range.Bound.inclusive(message.getIdAsString())));
 
                     records.forEach(record -> {
-                        log.info("重新处理消息: {}", record.getValue());
-
-                        stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY,  RedisStreamConfig.GROUP_NAME, record.getId());
+                        Map<Object, Object> value = record.getValue();
+                        if (value != null) {
+                            Long time = Long.parseLong(value.get("time").toString());
+                            if (shouldConsumer(time)){
+                                log.info("重新处理消息: {}", value);
+                                //TODO 重新处理消息
+                                stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY,  RedisStreamConfig.GROUP_NAME, record.getId());
+                            }
+                        }
                     });
 
                 }
             });
         }
+    }
+
+    private boolean shouldConsumer(long time) {
+        LocalDateTime currentTime = LocalDateTime.now();
+        long currentTimestampMilli = currentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return currentTimestampMilli >= time;
     }
 
 }

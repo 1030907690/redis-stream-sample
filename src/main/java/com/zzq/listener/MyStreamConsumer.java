@@ -31,16 +31,16 @@ public class MyStreamConsumer implements StreamListener<String, MapRecord<String
     public void onMessage(MapRecord<String, String, String> record) {
         Map<String, String> map = record.getValue();
         log.info("收到消息: {}", map);
-        if (shouldConsumer(map)) {
+        if (shouldConsumer(Long.parseLong(map.get("time")))) {
             // TODO 业务处理
             stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
         }
     }
 
-    private boolean shouldConsumer(Map<String, String> map) {
-        long time = Long.parseLong(map.get("time"));
+    private boolean shouldConsumer(long time) {
         LocalDateTime currentTime = LocalDateTime.now();
         long currentTimestampMilli = currentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         return currentTimestampMilli >= time;
     }
+
 }
