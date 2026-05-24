@@ -15,6 +15,8 @@ import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 
 /**
@@ -54,7 +56,7 @@ public class RedisStreamConfig {
 
         //  注册消费者
         container.receive(
-                Consumer.from(GROUP_NAME, "consumer-1"), // 消费组名和消费者实例名
+                Consumer.from(GROUP_NAME, getHostName()), // 消费组名和消费者实例名
                 StreamOffset.create(STREAM_KEY, ReadOffset.lastConsumed()), // 从最后一次消费的位置开始
                 myStreamConsumer
         );
@@ -70,6 +72,18 @@ public class RedisStreamConfig {
         } catch (Exception e) {
             // 生产环境下，如果组已存在会抛异常，这里直接捕获忽略即可
             log.info("消费组已存在或初始化跳过: {}", e.getMessage());
+        }
+    }
+
+    private String getHostName() {
+        try {
+            // 获取本机的InetAddress对象
+            InetAddress localHost = InetAddress.getLocalHost();
+            // 获取主机名
+            return localHost.getHostName();
+        } catch (UnknownHostException e) {
+            log.warn("获取主机名失败 {} ",e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
     }
 }
