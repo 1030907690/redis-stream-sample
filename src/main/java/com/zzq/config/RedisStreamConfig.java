@@ -82,7 +82,7 @@ public class RedisStreamConfig {
             // 获取主机名
             return localHost.getHostName();
         } catch (UnknownHostException e) {
-            log.warn("获取主机名失败 {} ",e.getMessage());
+            log.error("获取主机名失败 {} ",e.getMessage());
             throw new RuntimeException(e.getMessage());
         }
     }
