@@ -2,6 +2,7 @@ package com.zzq.config;
 
 
 import com.zzq.listener.MyStreamConsumer;
+import com.zzq.utils.ComputerInfoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,7 @@ public class RedisStreamConfig {
 
         //  注册消费者
         container.receive(
-                Consumer.from(GROUP_NAME, getHostName()), // 消费组名和消费者实例名
+                Consumer.from(GROUP_NAME, ComputerInfoUtil.getHostName()), // 消费组名和消费者实例名
                 StreamOffset.create(STREAM_KEY, ReadOffset.lastConsumed()), // 从最后一次消费的位置开始
                 myStreamConsumer
         );
@@ -75,15 +76,5 @@ public class RedisStreamConfig {
         }
     }
 
-    private String getHostName() {
-        try {
-            // 获取本机的InetAddress对象
-            InetAddress localHost = InetAddress.getLocalHost();
-            // 获取主机名
-            return localHost.getHostName();
-        } catch (UnknownHostException e) {
-            log.error("获取主机名失败 {} ",e.getMessage());
-            throw new RuntimeException(e.getMessage());
-        }
-    }
+
 }
