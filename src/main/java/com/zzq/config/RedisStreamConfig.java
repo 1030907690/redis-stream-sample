@@ -2,13 +2,12 @@ package com.zzq.config;
 
 
 import com.zzq.listener.MyStreamConsumer;
-import com.zzq.utils.ComputerInfoUtil;
+import com.zzq.utils.MachineInfoUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
@@ -16,8 +15,6 @@ import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 
 /**
@@ -57,7 +54,7 @@ public class RedisStreamConfig {
 
         //  注册消费者
         container.receive(
-                Consumer.from(GROUP_NAME, ComputerInfoUtil.getHostName()), // 消费组名和消费者实例名
+                Consumer.from(GROUP_NAME, MachineInfoUtil.getHostName()), // 消费组名和消费者实例名
                 StreamOffset.create(STREAM_KEY, ReadOffset.lastConsumed()), // 从最后一次消费的位置开始
                 myStreamConsumer
         );

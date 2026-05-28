@@ -12,9 +12,9 @@ import java.net.UnknownHostException;
  * @author: Zhou Zhongqing
  * @since : 5/28/2026 10:08 PM
  */
-public class ComputerInfoUtil {
+public class MachineInfoUtil {
 
-    private static final Logger log = LoggerFactory.getLogger(ComputerInfoUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(MachineInfoUtil.class);
 
     public static String getHostName() {
         try {
