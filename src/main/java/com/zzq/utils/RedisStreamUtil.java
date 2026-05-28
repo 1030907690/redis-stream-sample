@@ -22,9 +22,9 @@ import java.util.HashMap;
  * @date: 3/19/2026 10:22 PM
  */
 @Service
-public class RedisStreamProducer {
+public class RedisStreamUtil {
 
-    private final Logger log = LoggerFactory.getLogger(RedisStreamProducer.class);
+    private final Logger log = LoggerFactory.getLogger(RedisStreamUtil.class);
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
