@@ -15,16 +15,21 @@ import org.springframework.util.Assert;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
- * @description:
+ *
  * @author: Zhou Zhongqing
- * @date: 3/19/2026 10:22 PM
+ * @since: 3/19/2026 10:22 PM
  */
 @Service
 public class RedisStreamUtil {
 
     private final Logger log = LoggerFactory.getLogger(RedisStreamUtil.class);
+
+    private static final String KEY_TIME = "time";
+
+    private static final String KEY_DATE = "data";
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -48,8 +53,8 @@ public class RedisStreamUtil {
         Assert.notNull(consumerDateTime, "consumerDateTime must not be null");
 
         HashMap<String, String> map = new HashMap<>();
-        map.put("data", data);
-        map.put("time", String.valueOf(consumerDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
+        map.put(KEY_DATE, data);
+        map.put(KEY_TIME, String.valueOf(consumerDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
         MapRecord<String, String, String> record = StreamRecords.newRecord()
                 .in(RedisStreamConfig.STREAM_KEY)
                 .ofMap(map)
@@ -60,5 +65,21 @@ public class RedisStreamUtil {
 
         //  限制长度（trim）  true 近似修剪
         stringRedisTemplate.opsForStream().trim(RedisStreamConfig.STREAM_KEY, maxLen, true);
+    }
+
+
+    public Map<String, String> convert(Map<Object, Object> value) {
+        Map<String, String> result = new HashMap<>();
+        result.put(KEY_TIME, String.valueOf(value.get(KEY_TIME)));
+        result.put(KEY_DATE, String.valueOf(value.get(KEY_DATE)));
+        return result;
+    }
+
+    public boolean shouldConsumer(Map<String, String> value) {
+        long time = Long.parseLong(value.get(KEY_TIME).toString());
+
+        LocalDateTime currentTime = LocalDateTime.now();
+        long currentTimestampMilli = currentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return currentTimestampMilli >= time;
     }
 }

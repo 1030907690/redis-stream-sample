@@ -2,6 +2,7 @@ package com.zzq.listener;
 
 
 import com.zzq.config.RedisStreamConfig;
+import com.zzq.utils.RedisStreamUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,20 +28,19 @@ public class MyStreamConsumer implements StreamListener<String, MapRecord<String
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
+    @Autowired
+    private RedisStreamUtil redisStreamUtil;
+
     @Override
     public void onMessage(MapRecord<String, String, String> record) {
         Map<String, String> map = record.getValue();
         log.info("收到消息: {}", map);
-        if (shouldConsumer(Long.parseLong(map.get("time")))) {
+        if (redisStreamUtil.shouldConsumer(map)) {
             // TODO 业务处理
             stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
         }
     }
 
-    private boolean shouldConsumer(long time) {
-        LocalDateTime currentTime = LocalDateTime.now();
-        long currentTimestampMilli = currentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        return currentTimestampMilli >= time;
-    }
+
 
 }
