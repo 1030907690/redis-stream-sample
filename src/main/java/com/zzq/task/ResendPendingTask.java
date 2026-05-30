@@ -42,7 +42,7 @@ public class ResendPendingTask {
 
         PendingMessagesSummary summary = stringRedisTemplate.opsForStream().pending(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME);
 
-        if (summary != null) {
+        if (summary != null && summary.getTotalPendingMessages() > 0) {
               // 读取前 10 条 Pending 消息
             // 由于有shouldConsumer逻辑存在，此处可能一直拉到相同10条数据
             PendingMessages pendingMessages = stringRedisTemplate.opsForStream()
