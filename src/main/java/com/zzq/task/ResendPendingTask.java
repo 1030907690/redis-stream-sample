@@ -79,7 +79,7 @@ public class ResendPendingTask {
                     }
 
 
-                    // 防毒丸死循环死锁
+                    // 防毒丸死循环死锁,先claim保证ack时消费者一致
                     // 如果一条消息连续被捞起来处理了 5 次都无法成功 ACK，说明它是死信（比如格式错误、业务脏数据），执行XCLAIM了算处理1次
                     if (deliveryCount > 5) {
                         claimedRecords.forEach(record -> {
