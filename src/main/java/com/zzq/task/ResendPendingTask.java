@@ -36,6 +36,8 @@ public class ResendPendingTask {
 
     @Autowired
     private RedisStreamUtil redisStreamUtil;
+    // 声明一个成员变量（游标），记录每次拉取的最后一条 ID, 解决可能每次拉取到相同10条数据问题
+    private RecordId lastSeenId = RecordId.of("-");
 
     @Scheduled(fixedRate = 10000)
     public void resendPendingMessages() {
@@ -43,16 +45,24 @@ public class ResendPendingTask {
         PendingMessagesSummary summary = stringRedisTemplate.opsForStream().pending(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME);
 
         if (summary != null && summary.getTotalPendingMessages() > 0) {
-              // 读取前 10 条 Pending 消息
+            // 读取前 10 条 Pending 消息
             // 由于有shouldConsumer逻辑存在，此处可能一直拉到相同10条数据
             PendingMessages pendingMessages = stringRedisTemplate.opsForStream()
-                    .pending(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, Range.unbounded(), 10);
+                    .pending(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME,
+                            Range.from(Range.Bound.inclusive(lastSeenId)).to(Range.Bound.unbounded()),
+                            , 10);
+
+            if (pendingMessages == null || pendingMessages.isEmpty()) {
+                this.resetCursor();
+                return;
+            }
+
 
             pendingMessages.forEach(message -> {
                 // 获取消息 ID 和已投递次数
                 RecordId id = message.getId();
                 Duration elapsed = message.getElapsedTimeSinceLastDelivery();
-
+                this.setCursor(id);
                 // 3. 如果消息超过 30 秒还没处理完，说明原消费者可能挂了，重新处理
                 if (elapsed.getSeconds() > 30) {
                     // 这里可以重新读取消息内容并执行业务，或者使用 XCLAIM 转移给其他消费者
@@ -98,15 +108,20 @@ public class ResendPendingTask {
                     }
 
 
-
-
                 }
             });
+        } else {
+            this.resetCursor();
         }
     }
 
+    private void resetCursor() {
+        this.lastSeenId = RecordId.of("-");
+    }
 
-
+    private void setCursor(RecordId id) {
+        this.lastSeenId = id;
+    }
 
 
 }
