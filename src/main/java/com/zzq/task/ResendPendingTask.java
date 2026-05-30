@@ -55,18 +55,23 @@ public class ResendPendingTask {
 
                 long deliveryCount = message.getTotalDeliveryCount(); // 消息被投递的次数
 
-                // 防毒丸死循环死锁
-                // 如果一条消息连续被捞起来处理了 5 次都无法成功 ACK，说明它是死信（比如格式错误、业务脏数据）
-                if (deliveryCount > 5) {
-                    log.error("【死信报警】消息连续投递异常超过5次，强行确认并人工接入! ID: {}", id);
-                    // 生产环境规范：建议在这里将其记录到 MySQL 死信表或者发送钉钉通知，然后强制 ACK，把道路让给后面的消息
-                    stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, id);
-                    return;
-                }
+
 
 
                 // 3. 如果消息超过 30 秒还没处理完，说明原消费者可能挂了，重新处理
                 if (elapsed.getSeconds() > 30) {
+
+
+                    // 防毒丸死循环死锁
+                    // 如果一条消息连续被捞起来处理了 5 次都无法成功 ACK，说明它是死信（比如格式错误、业务脏数据）
+                    if (deliveryCount > 5) {
+                        log.error("【死信报警】消息连续投递异常超过5次，强行确认并人工接入! ID: {}", id);
+                        // 生产环境规范：建议在这里将其记录到 MySQL 死信表或者发送钉钉通知，然后强制 ACK，把道路让给后面的消息
+                        stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, id);
+                        return;
+                    }
+
+
                     // 这里可以重新读取消息内容并执行业务，或者使用 XCLAIM 转移给其他消费者
 
                     // 核心优化：使用 claim 转移拥有权并直接获取消息内容
