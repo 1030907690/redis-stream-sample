@@ -25,12 +25,14 @@ public class IndexController {
     @Autowired
     private RedisStreamUtil redisStreamProducer;
 
+    private int count = 0;
+
     @GetMapping("/")
     @Operation(summary = "首页接口")
     public String index() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedStr = LocalDateTime.now().format(formatter);
-        redisStreamProducer.sendObjectWithLimit("测试数据"+ formattedStr);
+        redisStreamProducer.sendObjectWithLimit("测试数据 "+ count + " "+ formattedStr);
         return "index";
     }
 
