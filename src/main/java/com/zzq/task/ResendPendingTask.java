@@ -55,11 +55,8 @@ public class ResendPendingTask {
                 long deliveryCount = message.getTotalDeliveryCount(); // 消息被投递的次数
 
 
-
-
                 // 3. 如果消息超过 30 秒还没处理完，说明原消费者可能挂了，重新处理
                 if (elapsed.getSeconds() > 30) {
-
 
 
                     // 这里可以重新读取消息内容并执行业务，或者使用 XCLAIM 转移给其他消费者
@@ -79,36 +76,37 @@ public class ResendPendingTask {
                     }
 
 
+                    MapRecord<String, Object, Object> valueMapRecord = claimedRecords.stream().findFirst().get();
+
                     // 防毒丸死循环死锁,先claim保证ack时消费者一致
                     // 如果一条消息连续被捞起来处理了 5 次都无法成功 ACK，说明它是死信（比如格式错误、业务脏数据），执行XCLAIM了算处理1次
                     if (deliveryCount > 5) {
-                        claimedRecords.forEach(record -> {
-                            log.error("【死信报警】消息连续投递异常超过5次，强行确认并人工接入! ID: {}", record.getId());
-                            // 生产环境规范：建议在这里将其记录到 MySQL 死信表或者发送钉钉通知，然后强制 ACK，把道路让给后面的消息
-                            stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
-                        });
+
+                        log.error("【死信报警】消息连续投递异常超过5次，强行确认并人工接入! ID: {}", valueMapRecord.getId());
+                        // 生产环境规范：建议在这里将其记录到 MySQL 死信表或者发送钉钉通知，然后强制 ACK，把道路让给后面的消息
+                        stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, valueMapRecord.getId());
+
                         return;
                     }
 
-                    for (MapRecord<String, Object, Object> record : claimedRecords) {
-                        try {
 
-                            Map<String, String> value = redisStreamUtil.convert(record.getValue());
+                    try {
 
-                            log.info("重新处理消息: {}", value);
+                        Map<String, String> value = redisStreamUtil.convert(valueMapRecord.getValue());
 
-                            // TODO: 你的实际业务处理逻辑
+                        log.info("重新处理消息: {}", value);
 
-                            // 处理成功，确认消息
-                            stringRedisTemplate.opsForStream().acknowledge(
-                                    RedisStreamConfig.STREAM_KEY,
-                                    RedisStreamConfig.GROUP_NAME,
-                                    record.getId()
-                            );
-                        } catch (Exception e) {
-                            log.error("处理单条 Pending 消息失败, ID: " + record.getId(), e);
-                            // 这里可以做重试次数累加，如果超过 3~5 次一直失败，建议人工介入或进入死信，防止死循环
-                        }
+                        // TODO: 你的实际业务处理逻辑
+
+                        // 处理成功，确认消息
+                        stringRedisTemplate.opsForStream().acknowledge(
+                                RedisStreamConfig.STREAM_KEY,
+                                RedisStreamConfig.GROUP_NAME,
+                                valueMapRecord.getId()
+                        );
+                    } catch (Exception e) {
+                        log.error("处理单条 Pending 消息失败, ID: " + valueMapRecord.getId(), e);
+                        // 这里可以做重试次数累加，如果超过 3~5 次一直失败，建议人工介入或进入死信，防止死循环
                     }
 
 
