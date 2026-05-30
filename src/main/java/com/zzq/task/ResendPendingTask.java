@@ -50,7 +50,7 @@ public class ResendPendingTask {
             PendingMessages pendingMessages = stringRedisTemplate.opsForStream()
                     .pending(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME,
                             Range.from(Range.Bound.inclusive(lastSeenId)).to(Range.Bound.unbounded()),
-                            , 10);
+                            10);
 
             if (pendingMessages == null || pendingMessages.isEmpty()) {
                 this.resetCursor();
