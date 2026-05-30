@@ -27,34 +27,28 @@ public class RedisStreamUtil {
 
     private final Logger log = LoggerFactory.getLogger(RedisStreamUtil.class);
 
-    private static final String KEY_TIME = "time";
 
     private static final String KEY_DATE = "data";
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
-    public void sendObjectWithLimit(String data) {
-        sendObjectWithLimit(data, 10000, LocalDateTime.now());
-    }
 
-    public void sendObjectWithLimit(String data,LocalDateTime consumerDateTime) {
-        sendObjectWithLimit(data, 10000, consumerDateTime);
+
+    public void sendObjectWithLimit(String data) {
+        sendObjectWithLimit(data, 10000);
     }
 
     /**
      * 发送数据到队列，带有限制长度
      * @param data  数据
      * @param maxLen  最大长度，近似修剪方式
-     * @param consumerDateTime  真正消费的时间，为了做延迟队列
      */
-    public void sendObjectWithLimit(String data, long maxLen, LocalDateTime consumerDateTime) {
+    public void sendObjectWithLimit(String data, long maxLen) {
         Assert.notNull(data, "data must not be null");
-        Assert.notNull(consumerDateTime, "consumerDateTime must not be null");
 
         HashMap<String, String> map = new HashMap<>();
         map.put(KEY_DATE, data);
-        map.put(KEY_TIME, String.valueOf(consumerDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()));
         MapRecord<String, String, String> record = StreamRecords.newRecord()
                 .in(RedisStreamConfig.STREAM_KEY)
                 .ofMap(map)
@@ -70,16 +64,9 @@ public class RedisStreamUtil {
 
     public Map<String, String> convert(Map<Object, Object> value) {
         Map<String, String> result = new HashMap<>();
-        result.put(KEY_TIME, String.valueOf(value.get(KEY_TIME)));
         result.put(KEY_DATE, String.valueOf(value.get(KEY_DATE)));
         return result;
     }
 
-    public boolean shouldConsumer(Map<String, String> value) {
-        long time = Long.parseLong(value.get(KEY_TIME).toString());
 
-        LocalDateTime currentTime = LocalDateTime.now();
-        long currentTimestampMilli = currentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        return currentTimestampMilli >= time;
-    }
 }

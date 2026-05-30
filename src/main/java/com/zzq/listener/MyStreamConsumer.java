@@ -35,12 +35,10 @@ public class MyStreamConsumer implements StreamListener<String, MapRecord<String
     public void onMessage(MapRecord<String, String, String> record) {
         Map<String, String> map = record.getValue();
         log.info("收到消息: {}", map);
-        if (redisStreamUtil.shouldConsumer(map)) {
-            // TODO 业务处理
-            stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
-        }
-    }
 
+        // TODO 业务处理
+        stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
+    }
 
 
 }

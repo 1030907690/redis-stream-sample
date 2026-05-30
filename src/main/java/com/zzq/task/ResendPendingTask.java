@@ -73,24 +73,19 @@ public class ResendPendingTask {
 
                     for (MapRecord<String, Object, Object> record : claimedRecords) {
                         try {
-                            Map<Object, Object> value = record.getValue();
 
-                            if (redisStreamUtil.shouldConsumer(redisStreamUtil.convert(value))) {
-                                log.info("重新处理消息: {}", value);
+                            Map<String, String> value = redisStreamUtil.convert(record.getValue());
 
-                                // TODO: 你的实际业务处理逻辑
+                            log.info("重新处理消息: {}", value);
 
-                                // 处理成功，确认消息
-                                stringRedisTemplate.opsForStream().acknowledge(
-                                        RedisStreamConfig.STREAM_KEY,
-                                        RedisStreamConfig.GROUP_NAME,
-                                        record.getId()
-                                );
-                            } else {
-                                // 如果暂不满足消费条件，由于上面 claim 时设置了 30s 的 idle，
-                                // 它在接下来的 30 秒内不会再被重复捞起，腾出了空间给其他 pending 消息
-                                log.debug("当前时间未达到消息设定的消费时间，暂不处理, ID: {}", record.getId());
-                            }
+                            // TODO: 你的实际业务处理逻辑
+
+                            // 处理成功，确认消息
+                            stringRedisTemplate.opsForStream().acknowledge(
+                                    RedisStreamConfig.STREAM_KEY,
+                                    RedisStreamConfig.GROUP_NAME,
+                                    record.getId()
+                            );
                         } catch (Exception e) {
                             log.error("处理单条 Pending 消息失败, ID: " + record.getId(), e);
                             // 这里可以做重试次数累加，如果超过 3~5 次一直失败，建议人工介入或进入死信，防止死循环
@@ -98,15 +93,10 @@ public class ResendPendingTask {
                     }
 
 
-
-
                 }
             });
         }
     }
-
-
-
 
 
 }
