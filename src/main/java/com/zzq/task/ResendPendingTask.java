@@ -75,7 +75,7 @@ public class ResendPendingTask {
                             RedisStreamConfig.STREAM_KEY,
                             RedisStreamConfig.GROUP_NAME,
                             MachineInfoUtil.getHostName(), // 变成当前兜底消费者的名字
-                            Duration.ofSeconds(30), // 期望的 idle 时间
+                            Duration.ofSeconds(30), // 期望的 idle 时间再去强占
                             id
                     );
 
