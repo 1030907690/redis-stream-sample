@@ -84,9 +84,11 @@ public class ResendPendingTask {
                     // 防毒丸死循环死锁
                     // 如果一条消息连续被捞起来处理了 5 次都无法成功 ACK，说明它是死信（比如格式错误、业务脏数据），执行XCLAIM了算处理1次
                     if (realDeliveryCount > 5) {
-                        log.error("【死信报警】消息连续投递异常超过5次，强行确认并人工接入! ID: {}", id);
-                        // 生产环境规范：建议在这里将其记录到 MySQL 死信表或者发送钉钉通知，然后强制 ACK，把道路让给后面的消息
-                        stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, id);
+                        claimedRecords.forEach(record -> {
+                            log.error("【死信报警】消息连续投递异常超过5次，强行确认并人工接入! ID: {}", record.getId());
+                            // 生产环境规范：建议在这里将其记录到 MySQL 死信表或者发送钉钉通知，然后强制 ACK，把道路让给后面的消息
+                            stringRedisTemplate.opsForStream().acknowledge(RedisStreamConfig.STREAM_KEY, RedisStreamConfig.GROUP_NAME, record.getId());
+                        });
                         return;
                     }
 
