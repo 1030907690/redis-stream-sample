@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  *
@@ -27,7 +28,9 @@ public class IndexController {
     @GetMapping("/")
     @Operation(summary = "首页接口")
     public String index() {
-        redisStreamProducer.sendObjectWithLimit("张三"+ LocalDateTime.now());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedStr = LocalDateTime.now().format(formatter);
+        redisStreamProducer.sendObjectWithLimit("测试数据"+ formattedStr);
         return "index";
     }
 
