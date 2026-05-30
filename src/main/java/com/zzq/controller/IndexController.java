@@ -32,7 +32,7 @@ public class IndexController {
     public String index() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedStr = LocalDateTime.now().format(formatter);
-        redisStreamProducer.sendObjectWithLimit("测试数据 "+ count + " "+ formattedStr);
+        redisStreamProducer.sendObjectWithLimit("测试数据 "+ (count++) + " "+ formattedStr);
         return "index";
     }
 
