@@ -3,9 +3,14 @@ package com.zzq.config;
 
 import com.zzq.listener.MyStreamConsumer;
 import com.zzq.utils.MachineInfoUtil;
+import io.lettuce.core.RedisException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.server.GracefulShutdownCallback;
+import org.springframework.boot.web.server.GracefulShutdownResult;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.stream.Consumer;
@@ -42,6 +47,7 @@ public class RedisStreamConfig {
                         .builder()
                         .batchSize(10)
                         .pollTimeout(Duration.ofSeconds(2))
+                        .errorHandler(this::handleStreamError)
                         .build();
 
         //  初始化容器
@@ -64,6 +70,23 @@ public class RedisStreamConfig {
         return container;
     }
 
+    private void handleStreamError(Throwable throwable) {
+        if (isConnectionClosedError(throwable)) {
+            log.debug("Stream listener stopped, ignore closed connection: {}", throwable.getMessage());
+            return;
+        }
+        log.error("Unexpected error occurred in stream listener", throwable);
+    }
+
+    private boolean isConnectionClosedError(Throwable throwable) {
+        for (Throwable current = throwable; current != null; current = current.getCause()) {
+            if (current instanceof RedisException && "Connection closed".equals(current.getMessage())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void createGroupSafely(StringRedisTemplate stringRedisTemplate) {
         try {
             stringRedisTemplate.opsForStream().createGroup(STREAM_KEY, GROUP_NAME);
@@ -72,6 +95,7 @@ public class RedisStreamConfig {
             log.info("消费组已存在或初始化跳过: {}", e.getMessage());
         }
     }
+
 
 
 }
