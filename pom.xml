@@ -12,7 +12,7 @@
 	<artifactId>redis-stream-sample</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>redis-stream-sample</name>
-	<description>redis-stream-sampleasdf</description>
+	<description>redis-stream-sample</description>
 	<url/>
 	<licenses>
 		<license/>
